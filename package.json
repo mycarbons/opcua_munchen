@@ -1,0 +1,25 @@
+{
+  "name": "opcua_sample_client",
+  "version": "1.0.0",
+  "description": "sample",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sameddizdar/opcua_sample_client.git"
+  },
+  "author": "samed dizdar",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/sameddizdar/opcua_sample_client/issues"
+  },
+  "homepage": "https://github.com/sameddizdar/opcua_sample_client#readme",
+  "dependencies": {
+    "chalk": "^5.3.0",
+    "dotenv": "^16.3.1",
+    "node-opcua": "^2.108.0",
+    "nodemon": "^3.0.1"
+  }
+}
