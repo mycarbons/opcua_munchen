@@ -1,13 +1,7 @@
 require("dotenv").config();
 
 const opcuaClient = require("node-opcua-client");
-
-const endPointUrl = "opc.tcp://ISLETME37.SCOTTANKER.LOCAL:4334/opcua_server_path"
-
-async function timeout(ms) {
-  return new Promise(resolve => setTimeout(resolve, ms));
-}
-
+const endPointUrl = "opc.tcp://192.168.2.173:4334/opcua_server_path"
 
 
 const main = async () => {
@@ -29,7 +23,9 @@ const main = async () => {
 
     const session = await client.createSession();
     console.log("session created !");
-
+    session.on("keepalive", () => {
+      console.log("Session is Keep Alive...");
+    })
 
     client.on("backoff", (retry, delay) =>
       console.log(
@@ -59,21 +55,31 @@ const main = async () => {
       queueSize: 10
     }
 
-    const exhTemp1Mon = {
+
+    const monitoredItemsList = [];
+    for (let i = 1; i < 200; i++) {      
+      monitoredItemsList.push({ nodeId: `ns=1;i=${1000 + i}`, attributeId: opcuaClient.AttributeIds.Value });
+    }
+
+/*     const exhTemp1Mon = {
       nodeId: "ns=1;i=1001",
       attributeId: opcuaClient.AttributeIds.Value
+    };    
+    const exhTemp2Mon = {
+      nodeId: "ns=1;i=1002",
+      attributeId: opcuaClient.AttributeIds.Value
     };
-
+    const exhTemp3Mon = {
+      nodeId: "ns=1;i=1003",
+      attributeId: opcuaClient.AttributeIds.Value
+    };
+ */    
     /* const exhTemp1Sub = await subscription.monitor(
       exhTemp1Mon,
       parameters,
       opcuaClient.TimestampsToReturn.Both
     ); */
-
-    const exhTemp2Mon = {
-      nodeId: "ns=1;i=1002",
-      attributeId: opcuaClient.AttributeIds.Value
-    };
+    
     /* const exhTemp2Sub = await subscription.monitor(
       exhTemp2Mon,
       parameters,
@@ -94,14 +100,15 @@ const main = async () => {
     
 
      //monitoredNodes is an monitoredItem list
-    subscription.monitorItems([
-      exhTemp1Mon,
-      exhTemp2Mon
-    ], parameters, opcuaClient.TimestampsToReturn.Both, (err, monitoredItems) => {
-      monitoredItems.on("changed", function (items,data) {
-        console.log("Node ID: ", items.itemToMonitor.nodeId.value);
-        console.log("Node value: ", data.value.value);
-      });
+    subscription.monitorItems(
+      monitoredItemsList,
+      parameters,
+      opcuaClient.TimestampsToReturn.Both,
+      (err, monitoredItems) => {
+        monitoredItems.on("changed", function (items, data) {
+          console.log("Node ID: ", items.itemToMonitor.nodeId.value);
+          console.log("Node value: ", data.value.value);
+        });
     });
     
 
