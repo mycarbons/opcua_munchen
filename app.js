@@ -1,32 +1,19 @@
 const opcuaClient = require("node-opcua-client");
-const endPointUrl = "opc.tcp://192.168.2.191:4334/opcua_server_path"
-const pool = require("./connection");
+const endPointUrl = "opc.tcp://216.137.181.212:4334/opcua_server_path"
+const {configTable_me_ps, configTable_me_sb, configTable_aux_dg, configTable_aux_dg2, configTable_logic_data} = require("./connection")
+const saveMePs = require("./data_collectors/data_me_ps");
 
-
-async function configTable(nodeId) {
-  return new Promise((resolve, reject) => {
-    pool.query(`
-      CREATE TABLE IF NOT EXISTS tbl_deneme_cihazi_${nodeId} (
-        id INT(11) AUTO_INCREMENT PRIMARY KEY,
-        val VARCHAR(30) NOT NULL,
-        updated_at DATETIME default CURRENT_TIMESTAMP
-      ) engine=innoDB
-    `, err => {
-      if (err) return reject(err);
-      resolve(true);
-    });
-  });
-}
-
-async function saveData(nodeId, val) {
-  return new Promise((resolve, reject) => {
+async function saveData(session) {
+  saveMePs(session).then(values => console.log(values));
+  
+  /* return new Promise((resolve, reject) => {
     pool.query(`
       INSERT INTO tbl_deneme_cihazi_${nodeId} (val) VALUES ('${val}')
     `, (err) => {
       if (err) return reject(err);
       resolve(true);
     });
-  });
+  }); */
 }
 
 
@@ -65,6 +52,13 @@ const main = async () => {
       )
     );
 
+    await configTable_me_ps();
+    await configTable_me_sb();
+    await configTable_aux_dg();
+    await configTable_aux_dg2();
+    await configTable_logic_data();
+
+
     const subscription = opcuaClient.ClientSubscription.create(session, {
       requestedPublishingInterval: 100,
       requestedLifetimeCount: 100,
@@ -73,7 +67,7 @@ const main = async () => {
       publishingEnabled: true,
       priority: 10
     });
-    
+
     const parameters = {
       samplingInterval: 500, //data kontrolü yapma sıklığı
       filter: null,
@@ -81,28 +75,18 @@ const main = async () => {
       queueSize: 10
     }
 
+    maxAge = 0;
+    const itemToMonitor = { nodeId: "ns=1;i=1001", attributeId: opcuaClient.AttributeIds.Value };
+    const monitoredItem = opcuaClient.ClientMonitoredItem.create(subscription, itemToMonitor, parameters, opcuaClient.TimestampsToReturn.Both);
 
-    const monitoredItemsList = [];
-    for (let i = 1; i <= 200; i++) {      
-      monitoredItemsList.push({ nodeId: `ns=1;i=${1000 + i}`, attributeId: opcuaClient.AttributeIds.Value });
-      await configTable(1000+i);
-    }
+    setInterval(async () => {
+      //monitoredItem.on("changed", console.log);
 
-
-    //monitoredNodes is an monitoredItem list
-    subscription.monitorItems(
-      monitoredItemsList,
-      parameters,
-      opcuaClient.TimestampsToReturn.Both,
-      (err, monitoredItems) => {
-        if (err) throw err;
-        monitoredItems.on("changed", async function (items, data) {
-          let nodeId = items.itemToMonitor.nodeId.value;
-          let val = data.value.value;
-          console.log("Node ID: ", items.itemToMonitor.nodeId.value, "\t\t", "Node value: ", data.value.value);
-          await saveData(nodeId, val);
-        });
-    });
+      //opcuaClient.ClientMonitoredItemGroup()
+      //const valuesArr = await saveData(session);
+      //const values = valuesArr.map(el => el.value.value / 100);
+      //console.log(values);
+    }, 5000);
     
 
   } catch (error) {
