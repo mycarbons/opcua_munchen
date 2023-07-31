@@ -1,4 +1,8 @@
 const opcuaClient = require("node-opcua-client");
+const express = require("express");
+const http = require("http");
+const { Server } = require("socket.io");
+
 const endPointUrl = "opc.tcp://216.137.181.212:4334/opcua_server_path"
 const { configTable_me_ps, saveData_me_ps } = require("./models/MainEnginePS");
 const { configTable_me_sb, saveData_me_sb } = require("./models/MainEngineSB");
@@ -7,11 +11,27 @@ const { configTable_aux_dg2, saveData_aux_dg2 } = require("./models/AuxDG2");
 const { configTable_logic_data, saveData_logic_data } = require("./models/LogicData");
 const configDataPromise = require("./models/ConfigData");
 
-const dataObject = {}
 
 
 const main = async () => {
 
+  const app = express();
+  const server = http.createServer(app);
+  const io = new Server(server, {
+    cors: {
+      origin: '*'
+    }
+  });
+
+  server.listen(3700, ()=>{
+    console.log("Server listening the port:3700 for socket connections");
+  });
+  
+  io.sockets.on("connection", (socket) => {
+    console.log("Someone connected to socket");
+  });
+
+  const dataObject = {}
   const configData = await configDataPromise();
   
   try {
@@ -82,10 +102,14 @@ const main = async () => {
       opcuaClient.TimestampsToReturn.Both,
       (err, monitoredItems) => {
         if (err) throw err;
-        monitoredItems.on("changed", async function (items, data) {
+        monitoredItems.on("changed", function (items, data) {
           let nodeId = items.itemToMonitor.nodeId.value;
           let val = data.value.value;
           dataObject[`val_${nodeId}`] = val/100;
+          io.sockets.emit("singleValue", {
+            nodeId: nodeId,
+            value: val
+          });
           //console.log("Node ID: ", items.itemToMonitor.nodeId.value, "\t\t", "Node value: ", data.value.value);
         });
     });

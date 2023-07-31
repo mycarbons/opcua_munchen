@@ -18,7 +18,9 @@
   },
   "homepage": "https://github.com/sameddizdar/opcua_sample_client#readme",
   "dependencies": {
+    "express": "^4.18.2",
     "mysql2": "^3.5.2",
-    "node-opcua-client": "^2.108.0"
+    "node-opcua-client": "^2.108.0",
+    "socket.io": "^4.7.1"
   }
 }
