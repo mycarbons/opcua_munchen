@@ -177,7 +177,7 @@ async function main() {
     await configTable_aux_dg2();
     await configTable_logic_data();
     
-    createOPCsubscription();
+    createOPCsubscription(io);
     startDataSync();
 
   } catch (error) {

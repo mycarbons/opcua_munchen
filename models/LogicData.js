@@ -7,7 +7,7 @@ async function saveData_logic_data(dataObject){
   return new Promise((resolve, reject) => {
     let arr = [];
     for(let i = 1139; i <= 1201; i++){
-      arr.push(dataObject[`val_${i}`]);
+      arr.push(dataObject[`val_${i}`] % 2 == 1);
     }
     pool.query(`
       INSERT INTO tbl_logic_data (

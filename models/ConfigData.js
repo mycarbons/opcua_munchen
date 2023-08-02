@@ -23,8 +23,38 @@ const init = {
   opc_queueSize:10
 }
 
+async function configData(){
+  return new Promise((resolve, reject) => {
+    pool.query(`CREATE TABLE IF NOT EXISTS tbl_config (
+      me_ps_save_interval VARCHAR(100) NOT NULL,
+      me_sb_save_interval VARCHAR(100) NOT NULL,
+      aux_dg1_save_interval VARCHAR(100) NOT NULL,
+      aux_dg2_save_interval VARCHAR(100) NOT NULL,
+      logic_data_save_interval VARCHAR(100) NOT NULL,
+      endpoint_ip VARCHAR(100) NOT NULL,
+      endpoint_port VARCHAR(100) NOT NULL,
+      endpoint_path VARCHAR(100) NOT NULL,
+      socket_port VARCHAR(100) NOT NULL,
+      opc_applicationName VARCHAR(100) NOT NULL,
+      opc_initialDelay VARCHAR(100) NOT NULL,
+      opc_maxRetry VARCHAR(100) NOT NULL,
+      opc_requestedPublishingInterval VARCHAR(100) NOT NULL,
+      opc_requestedLifetimeCount VARCHAR(100) NOT NULL,
+      opc_requestedMaxKeepAliveCount VARCHAR(100) NOT NULL,
+      opc_maxNotificationsPerPublish VARCHAR(100) NOT NULL,
+      opc_priority VARCHAR(100) NOT NULL,
+      opc_samplingInterval VARCHAR(100) NOT NULL,
+      opc_queueSize VARCHAR(100) NOT NULL
+    )`, (err) => {
+      if (err) return reject(err);
+      resolve(true);
+    });
+  });
+}
+
 
 async function getConfigData() {
+  await configData();
   return new Promise((resolve, reject) => {
     pool.query(`SELECT * FROM tbl_config`, (err, result) => {
       if (err) {
